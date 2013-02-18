@@ -20,19 +20,25 @@
 
                 constructor: function () {
                     this.__entries = [];
+                    this.__keys = [];
+                    this.__values = [];
                 },
 
                 pushValue: function (key, value) {
+                    this.__keys.push(key);
+                    this.__values.push(value);
                     this.__entries.push({key: key, value: value});
                     return value;
                 },
 
                 remove: function (key) {
-                    var ret = null, map = this.__entries, val;
+                    var ret = null, map = this.__entries, val, keys = this.__keys, vals = this.__values;
                     var i = map.length - 1;
                     for (; i >= 0; i--) {
                         if (!!(val = map[i]) && val.key === key) {
-                            map[i] = null;
+                            map.splice(i, 1);
+                            keys.splice(i, 1);
+                            vals.splice(i, 1);
                             return val.value;
                         }
                     }
@@ -40,11 +46,12 @@
                 },
 
                 "set": function (key, value) {
-                    var ret = null, map = this.__entries;
+                    var ret = null, map = this.__entries, vals = this.__values;
                     var i = map.length - 1;
                     for (; i >= 0; i--) {
                         var val = map[i];
                         if (val && key === val.key) {
+                            vals[i] = value;
                             val.value = value;
                             ret = value;
                             break;
@@ -69,42 +76,16 @@
                     return ret;
                 },
 
-                getEntrySet: function (arr) {
-                    var map = this.__entries, l = map.length;
-                    if (l) {
-                        for (var i = 0; i < l; i++) {
-                            var e = map[i];
-                            if (e) {
-                                arr.push(e);
-                            }
-                        }
-                    }
+                getEntrySet: function () {
+                    return this.__entries;
                 },
 
-                getKeys: function (arr) {
-                    var map = this.__entries, l = map.length;
-                    if (l) {
-                        for (var i = 0; i < l; i++) {
-                            var e = map[i];
-                            if (e) {
-                                arr.push(e.key);
-                            }
-                        }
-                    }
-                    return arr;
+                getKeys: function () {
+                    return this.__keys;
                 },
 
                 getValues: function (arr) {
-                    var map = this.__entries, l = map.length;
-                    if (l) {
-                        for (var i = 0; i < l; i++) {
-                            var e = map[i];
-                            if (e) {
-                                arr.push(e.value);
-                            }
-                        }
-                    }
-                    return arr;
+                    return this.__values;
                 }
             }
         });
@@ -117,11 +98,11 @@
                     this.__map = {};
                 },
 
-                __entrySet: function () {
-                    var ret = [];
-                    for (var i in this.__map) {
-                        if (this.__map.hasOwnProperty(i)) {
-                            this.__map[i].getEntrySet(ret);
+                entrySet: function () {
+                    var ret = [], map = this.__map;
+                    for (var i in map) {
+                        if (map.hasOwnProperty(i)) {
+                            ret = ret.concat(map[i].getEntrySet());
                         }
                     }
                     return ret;
@@ -187,7 +168,7 @@
                 },
 
                 filter: function (cb, scope) {
-                    var es = this.__entrySet(), ret = new this._static();
+                    var es = this.entrySet(), ret = new this._static();
                     es = _.filter(es, cb, scope);
                     for (var i = es.length - 1; i >= 0; i--) {
                         var e = es[i];
@@ -197,32 +178,32 @@
                 },
 
                 forEach: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     _.forEach(es, cb, scope);
                 },
 
                 every: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     return _.every(es, cb, scope);
                 },
 
                 map: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     return _.map(es, cb, scope);
                 },
 
                 some: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     return _.some(es, cb, scope);
                 },
 
                 reduce: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     return _.reduce(es, cb, scope);
                 },
 
                 reduceRight: function (cb, scope) {
-                    var es = this.__entrySet();
+                    var es = this.entrySet();
                     return _.reduceRight(es, cb, scope);
                 },
 
@@ -233,9 +214,9 @@
                 keys: function () {
                     var ret = [], map = this.__map;
                     for (var i in map) {
-                        if (map.hasOwnProperty(i)) {
-                            map[i].getKeys(ret);
-                        }
+                        //if (map.hasOwnProperty(i)) {
+                        ret = ret.concat(map[i].getKeys());
+                        //}
                     }
                     return ret;
                 },
@@ -243,15 +224,11 @@
                 values: function () {
                     var ret = [], map = this.__map;
                     for (var i in map) {
-                        if (map.hasOwnProperty(i)) {
-                            map[i].getValues(ret);
-                        }
+                        //if (map.hasOwnProperty(i)) {
+                        ret = ret.concat(map[i].getValues());
+                        //}
                     }
                     return ret;
-                },
-
-                entrySet: function () {
-                    return this.__entrySet();
                 },
 
                 isEmpty: function () {
